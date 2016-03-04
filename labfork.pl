@@ -139,7 +139,7 @@ my $groupdata = load_file($groupfile)
     or die "Unable to open group file: $!\n";
 
 my ($grouphash, $failures) = generate_group_lists($api, $groupdata);
-print "WARN: One or more user lookups failed:\n\t".join("\n\t", @{$failures})."\nAborting process.\n"
+print "WARN: One or more user lookups failed:\n\t".join("\n\t", @{$failures})."\nIgnoring failed users.\n"
     if(scalar(@{$failures}));
 
 foreach my $group (keys(%{$grouphash})) {
