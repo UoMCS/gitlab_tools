@@ -120,7 +120,7 @@ sub process_log {
             }
 
             # Clone the repository
-            print "Cloning ".$project -> {"name"}."... ";
+            print "Cloning ".$project -> {"ssh_url_to_repo"}."... ";
             my $out = system("/usr/bin/git clone $project->{ssh_url_to_repo}");
             print "output:\n$out\n";
 
