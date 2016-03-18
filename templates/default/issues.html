@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset="utf-8">
+        <title>{T_[title]}</title>
+
+        <style>
+p {
+    margin: 0.5em 0px;
+}
+ul.issues {
+    margin: 0px;
+    padding: 0px;
+}
+ul.issues > li {
+    list-style: none;
+    border-bottom: 1px solid #999;
+}
+ul.issues > li > h3 {
+    margin: 2px 0;
+}
+div.issuebar {
+    font-size: 80%;
+    color: #555;
+}
+ul.notes {
+    list-style: none;
+}
+ul.notes > li {
+    background: #e6e6e6;
+    margin: 5px;
+    padding: 5px;
+}
+div.notebar {
+    font-size: 80%;
+    color: #555;
+}
+        </style>
+    </head>
+    <body>
+        <h1>{T_[title]}</h1>
+        <ul class="issues">
+{T_[issues]}
+        </ul>
+    </body>
+</html>
