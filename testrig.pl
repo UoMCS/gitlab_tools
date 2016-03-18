@@ -22,17 +22,10 @@ my $api = GitLab::API::Utils -> new(url      => $config -> {"gitlab"} -> {"url"}
                                     token    => $config -> {"gitlab"} -> {"token"},
                                     autosudo => 1);
 
-my $destid = $api -> deep_fork(4)
+my $project = $api -> {"api"} -> call("/projects/:id", "GET" , { id => 5478 });
+print Dumper($project);
+
+my $issues = $api -> fetch_issues(4) #(5478)
     or die "Error: ".$api -> errstr()."\n";
 
-warn "Dest: $destid.\n";
-
-$api -> move_project($destid, "testing-group")
-    or die "Error: ".$api -> errstr()."\n";
-
-warn "Moved.\n";
-
-$api -> sync_issues(4, $destid, 1)
-    or die "Error: ".$api -> errstr()."\n";
-
-print "done.\n";
+print "Issues: ".Dumper($issues)."\n";
