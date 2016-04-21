@@ -15,6 +15,7 @@ use v5.12;
 use lib qw(/var/www/webperl);
 
 use Webperl::ConfigMicro;
+use Webperl::Utils qw(load_file);
 use GitLab::API::Utils;
 use Data::Dumper;
 
@@ -27,31 +28,6 @@ sub arg_error {
     my $message = shift;
 
     die "Error: $message\nUsage: labfork.pl <sourceID> <namespace> <projbase> <groupfile>\n";
-}
-
-
-## @fn $ load_file($name)
-# Load the contents of the specified file into memory. This will attempt to
-# open the specified file and read the contents into a string. This should be
-# used for all file reads whenever possible to ensure there are no internal
-# problems with UTF-8 encoding screwups.
-#
-# @param name The name of the file to load into memory.
-# @return The string containing the file contents, or undef on error. If this
-#         returns undef, $! should contain the reason why.
-sub load_file {
-    my $name = shift;
-
-    if(open(INFILE, "<:utf8", $name)) {
-        undef $/;
-        my $lines = <INFILE>;
-        $/ = "\n";
-        close(INFILE)
-            or return undef;
-
-        return $lines;
-    }
-    return undef;
 }
 
 
