@@ -84,6 +84,7 @@ die "No group/fork relations defined in specified group file.\n"
 if(scalar(@groups)) {
     foreach my $group (@groups) {
         if($forks -> {$group}) {
+            print "Setting permissions for group $group...\n";
             set_permission($api, $levelid, $forks -> {$group});
         } else {
             warn "Attempt to set permissions for non-existent group '$group'\n";
@@ -93,6 +94,7 @@ if(scalar(@groups)) {
 # No groups specified, so do all of them
 } else {
     foreach my $group (keys(%{$forks})) {
+        print "Setting permissions for group $group...\n";
         set_permission($api, $levelid, $forks -> {$group});
     }
 }
