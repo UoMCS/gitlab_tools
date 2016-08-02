@@ -22,10 +22,5 @@ my $api = GitLab::API::Utils -> new(url      => $config -> {"gitlab"} -> {"url"}
                                     token    => $config -> {"gitlab"} -> {"token"},
                                     autosudo => 1);
 
-my $project = $api -> {"api"} -> call("/projects/:id", "GET" , { id => 5478 });
-print Dumper($project);
-
-my $issues = $api -> fetch_issues(4) #(5478)
-    or die "Error: ".$api -> errstr()."\n";
-
-print "Issues: ".Dumper($issues)."\n";
+my $res = $api -> sync_issues(6114, 6166, 1)
+    or die "Copy failed: ".$api -> errstr();
