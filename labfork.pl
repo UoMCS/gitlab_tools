@@ -4,9 +4,10 @@
 # to a given namespace, setting up the user access to the forked projects.
 #
 # The groupfile should be a csv file, the first column is the user email
-# address, the second column is the group:
+# address, the second column is the student's UoM ID, the third is
+# the group:
 #
-# <email>,<group>
+# <email>,<spotid>,<group>
 #
 # group names must be alphanumerics only.
 
