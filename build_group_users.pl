@@ -127,27 +127,20 @@ sub add_jenkins_key {
         or die "Unable to load private key for '$username' from '$keyfile': $!\n";
 
     my $ua = LWP::UserAgent -> new();
-    my $data = { "json" => {
-        "domainCredentials" => {
-            "domain" => {
-                "name" => "",
-                "description" => "",
-            },
-            "credentials" => {
-                'scope' => 'GLOBAL',
-                'id' => '',
-                'username' => $username,
-                'description' => "$username credential",
-                'passphrase' => $keypass,
-                'stapler-class' => 'com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey',
-                'kind' => 'com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey',
-                'privateKeySource' => {
-                    'value' => '0',
-                    'privateKey' => $key,
-                    'stapler-class' => 'com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey$DirectEntryPrivateKeySource'
-                },
-            }
-        }
+    my $data = { "credentials" =>
+                 {
+                     'scope' => 'GLOBAL',
+                     'id' => $username,
+                     'username' => $username,
+                     'description' => "$username credential",
+                     'passphrase' => $keypass,
+                     'stapler-class' => 'com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey',
+                     'kind' => 'com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey',
+                     'privateKeySource' => {
+                         'value' => "0",
+                         'privateKey' => $key,
+                         'stapler-class' => 'com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey$DirectEntryPrivateKeySource'
+                     }
                  }
     };
 
@@ -160,8 +153,12 @@ sub add_jenkins_key {
         unless($csrf -> {"crumb"} && $csrf -> {"crumbRequestField"});
 
     $ua -> default_header($csrf -> {"crumbRequestField"} => $csrf -> {"crumb"});
+
+    $data -> {"json"} -> {"Jenkins-Crumb"} = $csrf -> {"crumb"};
+
     my $result = $ua -> post($settings -> {"jenkins"} -> {"base"}.$settings -> {"jenkins"} -> {"cred"},
-                             Content => encode_json($data));
+                             Content => { "json" => encode_json($data),
+                                          "Submit" => "OK"});
     die "Jenkins request failed: ".$result -> status_line."\n"
         unless($result -> is_success);
 }
@@ -172,10 +169,6 @@ my $config = Webperl::ConfigMicro -> new("config/gitlab.cfg")
 
 my $gitlab = GitLab::API::Basic -> new(url   => $config -> {"gitlab"} -> {"url"},
                                        token => $config -> {"gitlab"} -> {"token"});
-
-#my $groupname = "TEST_GROUP";
-#my ($userpass, $keypass, $keyfile) = generate_credentials($groupname, $config);
-#add_jenkins_key($groupname, $keyfile, $keypass, $config);
 
 # Pull the arguments
 my ($year, $course, $group, $minid, $maxid) = @ARGV;
@@ -188,9 +181,17 @@ foreach my $id ($minid..$maxid) {
                                                                               group  => $group,
                                                                               id     => $id });
     print "Going to add group user '$groupname'...\n";
+    print "\tCreating credentials...\n";
     my ($userpass, $keypass, $keyfile) = generate_credentials($groupname, $config);
+
+    print "\tAdding user to gitlab...\n";
     my $userid = add_gitlab_user($groupname, $userpass, $gitlab, $config);
+
+    print "\tAdding public key to gitlab...\n";
     add_gitlab_key($userid, $groupname, $keyfile.".pub", $gitlab, $config);
+
+    print "\tAdding private key to jenkins...\n";
+    add_jenkins_key($groupname, $keyfile, $keypass, $config);
 
     print "Group $groupname id: $userid\n"
 }
