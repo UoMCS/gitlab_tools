@@ -133,6 +133,17 @@ sub add_jenkins_key {
     my $key = load_file($keyfile)
         or die "Unable to load private key for '$username' from '$keyfile': $!\n";
 
+    # WARNING WARNING WARNING
+    # What follows is blatant Cargo Cult Coding. This seems to work, but it
+    #
+    # a) relies on faking a form post
+    # b) uses as-far-as-I-can-tell undocumented features of the credentials code
+    # c) may stop working without warning if jenkins changes
+    # d) is really bloody horrible compared to the sane REST endpoint that should
+    #    be there but either isn't, or isn't documented.
+    #
+    # In short: it's a godsaful mess that I'm vaguely ashamed to be using, but
+    # needs must as the devil vomits into your kettle.
     my $ua = LWP::UserAgent -> new();
     my $data = { "credentials" =>
                  {
