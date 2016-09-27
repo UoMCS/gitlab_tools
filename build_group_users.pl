@@ -176,10 +176,11 @@ die "Usage: build_group_users.pl <year> <course> <group> <min id> <max id>\n"
     unless($year && $year =~ /^\d{4}$/ && $course && $group && $minid && $maxid && ($minid <= $maxid));
 
 foreach my $id ($minid..$maxid) {
+    my $gid = ( $id < 10 ? "0$id" : $id);
     my $groupname = named_sprintf($config -> {"groups"} -> {"name_format"}, { year => $year,
                                                                               course => $course,
                                                                               group  => $group,
-                                                                              id     => $id });
+                                                                              id     => $gid });
     print "Going to add group user '$groupname'...\n";
     print "\tCreating credentials...\n";
     my ($userpass, $keypass, $keyfile) = generate_credentials($groupname, $config);
