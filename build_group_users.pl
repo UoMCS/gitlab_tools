@@ -117,6 +117,13 @@ sub add_gitlab_key {
 }
 
 
+## @fn void add_jenkins_key($username, $keyfile, $keypass, $settings)
+# Add the private key and key password as a credential in Jenkins.
+#
+# @param username The username to add the credential as. This is also used as the ID.
+# @param keyfile  The filename of the private key
+# @param keypass  The passphrase for the private key
+# @param settings A reference to a global settings object.
 sub add_jenkins_key {
     my $username = shift;
     my $keyfile  = shift;
@@ -144,6 +151,7 @@ sub add_jenkins_key {
                  }
     };
 
+    # Jenkins requires a CSRF header in requests
     my $result = $ua -> get($settings -> {"jenkins"} -> {"base"}.$settings -> {"jenkins"} -> {"csrf"});
     die "Jenkins CSRF request failed: ".$result -> status_line."\n"
         unless($result -> is_success);
@@ -156,6 +164,7 @@ sub add_jenkins_key {
 
     $data -> {"json"} -> {"Jenkins-Crumb"} = $csrf -> {"crumb"};
 
+    # Create the credential in Jenkins
     my $result = $ua -> post($settings -> {"jenkins"} -> {"base"}.$settings -> {"jenkins"} -> {"cred"},
                              Content => { "json" => encode_json($data),
                                           "Submit" => "OK"});
