@@ -3,13 +3,10 @@
 # Deep fork a GitLab project. This will perform a series of deep forks
 # to a given namespace, setting up the user access to the forked projects.
 #
-# The groupfile should be a csv file, the first column is the user email
-# address, the second column is the student's UoM ID, the third is
-# the group:
+# This fetches group information from the UserData API, and forks the
+# specified project once for each group, adding the group members to the
+# forked projects as it goes.
 #
-# <email>,<spotid>,<group>
-#
-# group names must be alphanumerics only.
 
 use strict;
 use v5.12;
@@ -17,7 +14,10 @@ use lib qw(/var/www/webperl);
 
 use Webperl::ConfigMicro;
 use Webperl::Utils qw(load_file);
+use Text::Sprintf::Named qw(named_sprintf);
 use GitLab::API::Utils;
+use REST::Client;
+use JSON;
 use Data::Dumper;
 
 
@@ -28,34 +28,57 @@ use Data::Dumper;
 sub arg_error {
     my $message = shift;
 
-    die "Error: $message\nUsage: labfork.pl <sourceID> <namespace> <projbase> <groupfile>\n";
+    die "Error: $message\nUsage: labfork.pl <sourceID> <course> <namespace> <projbase>\n";
+}
+
+
+## @fn $ fetch_group_data($rest, $course)
+# Fetch the group data from the UserData API for the specified course.
+#
+# @param rest   A reference to a REST::Client to issue queries through
+# @param course The course to fetch the groups for
+# @return A reference to an array of group hashes.
+sub fetch_group_data {
+    my $rest   = shift;
+    my $course = shift;
+
+    my $resp = $rest -> GET("/courses/current/groups/$course");
+    my $json = decode_json($resp -> responseContent());
+
+    # Pick up and fall over from errors
+    die "Unable to fetch group list from API. Error was:\n".$json -> {"error"} -> {"info"}."\n"
+        if(ref($json) eq "HASH" && $json -> {"error"});
+
+    return $json;
 }
 
 
 sub generate_group_lists {
     my $api       = shift;
     my $groupdata = shift;
+    my $settings  = shift;
 
     print "DEBUG: Generating group lists...\n";
 
     my $groups = { };
-    my @rows = split(/^/, $groupdata);
     my $failures = [];
-    foreach my $row (@rows) {
-        chomp($row);
+    foreach my $group (@{$groupdata}) {
+        print "DEBUG: Got group ".$group -> {"name"}." with ".scalar(@{$group -> {"users"}})." members\n";
 
-        my ($email, $uomid, $group) = $row =~ /^([^,]+),(\d+),(\w+)$/;
-        die "Unable to parse email or group from row\n'$row'\n\tEmail: ".($email || "not parsed")."\n\tGroup: ".($group || "not parsed")."\n"
-            unless($email && $group);
+        push(@{$group -> {"users"}}, { "email"    => named_sprintf($settings -> {"groups"} -> {"email_format"}, { "group" => $group -> {"name"} }),
+                                       "username" => "User for group ".$group -> {"name"},
+                                       "user_id"  => "NA" });
 
-        print "DEBUG: Looking up $email in $group... ";
-        my $res = $api -> {"api"} -> call("/users", "GET", { search => $email });
-        if($res && scalar(@{$res})) {
-            push(@{$groups -> {uc($group)}}, $res -> [0] -> {"id"});
-            print "uid: ".$res -> [0] -> {"id"}."\n";
-        } else {
-            push(@{$failures}, $row);
-            print "failed.\n";
+        foreach my $user (@{$group -> {"users"}}) {
+            print "DEBUG: Looking up ".$user -> {"email"}." in ".$group -> {"name"}."... ";
+            my $res = $api -> {"api"} -> call("/users", "GET", { search => $user -> {"email"} });
+            if($res && scalar(@{$res})) {
+                push(@{$groups -> {$group -> {"name"}}}, $res -> [0] -> {"id"});
+                print "uid: ".$res -> [0] -> {"id"}."\n";
+            } else {
+                push(@{$failures}, $user -> {"user_id"}.": ".$user -> {"username"}.", ".$user -> {"email"});
+                print "failed.\n";
+            }
         }
     }
 
@@ -101,24 +124,34 @@ sub deep_clone {
 my $config = Webperl::ConfigMicro -> new("config/gitlab.cfg")
     or die "Error: Unable to load configuration: $!\n";
 
+my $udataconfig = Webperl::ConfigMicro -> new("config/userdata.cfg")
+    or die "Error: Unable to load userdata configuration: $!\n";
+
 # Turn on autoflushing
 $| = 1;
 
 my $sourceid  = shift @ARGV or arg_error("No sourceID specified.");
+my $course    = shift @ARGV or arg_error("No course specified.");
 my $namespace = shift @ARGV or arg_error("No namespace specified.");
 my $projbase  = shift @ARGV or arg_error("No project base name specified.");
-my $groupfile = shift @ARGV or arg_error("No group file specified.");
 
 my $api = GitLab::API::Utils -> new(url   => $config -> {"gitlab"} -> {"url"},
                                     token => $config -> {"gitlab"} -> {"token"});
 
-my $groupdata = load_file($groupfile)
+my $rest = REST::Client -> new({ host => $udataconfig -> {"API"} -> {"url"} })
+    or die "Failed to create REST Client\n";
+$rest -> addHeader("Private-Token", $udataconfig -> {"API"} -> {"token"});
+
+# Fetch the group data from the userdata system
+my $groupdata = fetch_group_data($rest, $course)
     or die "Unable to open group file: $!\n";
 
-my ($grouphash, $failures) = generate_group_lists($api, $groupdata);
+# Now convert the users in the groups into gitlab users
+my ($grouphash, $failures) = generate_group_lists($api, $groupdata, $config);
 print "WARN: One or more user lookups failed:\n\t".join("\n\t", @{$failures})."\nIgnoring failed users.\n"
     if(scalar(@{$failures}));
 
-foreach my $group (keys(%{$grouphash})) {
-    deep_clone($api, $sourceid, $namespace, $projbase."_".$group, $grouphash -> {$group});
-}
+print "Got data: ".Dumper($grouphash)."\n";
+#foreach my $group (keys(%{$grouphash})) {
+#    deep_clone($api, $sourceid, $namespace, $projbase."_".$group, $grouphash -> {$group});
+#}
