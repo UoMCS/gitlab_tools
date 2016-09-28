@@ -80,7 +80,7 @@ my $course   = shift @ARGV or arg_error("No course specified.");
 my $teamfile = shift @ARGV or arg_error("No team file specified.");
 
 # Pull in the team data
-my $teams = load_teams($teamfile);
+my $teams = load_teams($teamfile, $config);
 print "Got ".scalar(keys(%{$teams}))." teams, adding users to teams...\n";
 
 # Need a REST API object to issue queries through
