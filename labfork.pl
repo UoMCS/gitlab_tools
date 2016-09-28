@@ -76,7 +76,8 @@ sub generate_group_lists {
 
         push(@{$group -> {"users"}}, { "email"    => named_sprintf($settings -> {"groups"} -> {"email_format"}, { "group" => $group -> {"name"} }),
                                        "username" => "User for group ".$group -> {"name"},
-                                       "user_id"  => "NA" });
+                                       "user_id"  => "NA" })
+            if($settings -> {"groups"} -> {"autogroup"});
 
         foreach my $user (@{$group -> {"users"}}) {
             print "DEBUG: Looking up ".$user -> {"email"}." in ".$group -> {"name"}."... ";
