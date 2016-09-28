@@ -9,11 +9,10 @@
 #
 
 use strict;
-use v5.12;
+use v5.14;
 use lib qw(/var/www/webperl);
 
 use Webperl::ConfigMicro;
-use Webperl::Utils qw(load_file);
 use Text::Sprintf::Named qw(named_sprintf);
 use GitLab::API::Utils;
 use REST::Client;
@@ -52,7 +51,17 @@ sub fetch_group_data {
     return $json;
 }
 
-
+## @fn @ generate_group_lists($api, $groupdata, $settings)
+# Given an array of groups, generate a new hash containing group members by
+# gitlab user ID.
+#
+# @param api       A reference to a GitLab::API::Utils object
+# @param groupdata A reference to an array of group hashes as returned by
+#                  the fetch_group_data() function.
+# @param settings  A reference to the global settings object
+# @return An array of two values; the first is a reference to a hash of
+#         group member arrays, the second is a reference to an array of
+#         user lookup failures.
 sub generate_group_lists {
     my $api       = shift;
     my $groupdata = shift;
