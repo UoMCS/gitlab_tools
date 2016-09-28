@@ -61,6 +61,9 @@ sub load_teams {
         my %vals;
         @vals{@headers} = split(/,/, $line);
 
+        die "No data for team field ($teamfield) or id field ($idfield) on line '$line'\n"
+            unless($vals{$teamfield} && $vals{$idfield});
+
         push(@{$teams -> {$vals{$teamfield}}}, $vals{$idfield})
     }
 
