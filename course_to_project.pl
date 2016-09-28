@@ -30,7 +30,12 @@ sub arg_error {
 ## @fn @ fetch_course_users($gitlab, $udata, $course)
 # Fetch the list of gitlab ID numbers for users enrolled on the specified course.
 #
-#
+# @param gitlab A reference to a gitlab API object to issue queries through.
+# @param udata  A reference to a userdata API object to issue queries through.
+# @param course The name of the course to fetch the user list for.
+# @return two arrayrefs; the first is a reference to an array of gitlab user IDs
+#         to add to the project, the second is a list of users who couldn't be
+#         resolved to gitlab user IDs.
 sub fetch_course_users {
     my $gitlab = shift;
     my $udata  = shift;
@@ -62,17 +67,26 @@ sub fetch_course_users {
 }
 
 
+## @fn void set_project_users($gitlab, $projid, $users, $level)
+# Given a project ID and list of users, add the users to the project as
+# the specified level (defaults to 'developer')
+#
+# @param gitlab A reference to a gitlab API object to work through.
+# @param projid The ID of the project to add the users to.
+# @param users  A reference to an array of gitlab user IDs.
+# @param level  The access level to add users at. Defaults to 30 ('developer').
 sub set_project_users {
     my $gitlab = shift;
     my $projid = shift;
     my $users  = shift;
+    my $level  = shift // 30;
 
     foreach my $userid (@{$users}) {
         print "DEBUG: Adding user $userid to project $projid...\n";
-#        my $res = $api -> call("/projects/:id/members", "POST", { id           => $projid,
-#                                                                  user_id      => $userid,
-#                                                                  access_level => 30 } )
-#            or die "Unable to set permissions for ".$userid." on $projid: ".$api -> errstr()."\n";
+        my $res = $api -> call("/projects/:id/members", "POST", { id           => $projid,
+                                                                  user_id      => $userid,
+                                                                  access_level => $level } )
+            or die "Unable to set permissions for ".$userid." on $projid: ".$api -> errstr()."\n";
     }
 }
 
