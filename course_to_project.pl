@@ -83,10 +83,10 @@ sub set_project_users {
 
     foreach my $userid (@{$users}) {
         print "DEBUG: Adding user $userid to project $projid...\n";
-        my $res = $api -> call("/projects/:id/members", "POST", { id           => $projid,
-                                                                  user_id      => $userid,
-                                                                  access_level => $level } )
-            or die "Unable to set permissions for ".$userid." on $projid: ".$api -> errstr()."\n";
+        my $res = $gitlab -> call("/projects/:id/members", "POST", { id           => $projid,
+                                                                     user_id      => $userid,
+                                                                     access_level => $level } )
+            or die "Unable to set permissions for ".$userid." on $projid: ".$gitlab -> errstr()."\n";
     }
 }
 
