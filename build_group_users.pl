@@ -180,7 +180,7 @@ sub add_jenkins_key {
                              Content => { "json" => encode_json($data),
                                           "Submit" => "OK"});
     die "Jenkins request failed: ".$result -> status_line."\n"
-        unless($result -> is_success);
+        unless($result -> is_success || $result -> status_line eq "302 Found");
 }
 
 
