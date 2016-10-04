@@ -105,7 +105,7 @@ sub deep_clone {
 
     print "DEBUG: Doing deep fork of $sourceid... ";
     # Do the actual fork into the admin user space
-    my $forkid = $api -> deep_fork($sourceid, 1, 1)
+    my $forkid = $api -> deep_fork($sourceid)
         or die "Error: ".$api -> errstr()."\n";
 
     print "Done.\nDEBUG: Doing rename of $forkid as $projname... ";
@@ -117,8 +117,12 @@ sub deep_clone {
     # And move it into the target namespace
     $api -> move_project($forkid, $namespace)
         or die $api -> errstr()."\n";
-    print "Done.\nFork: $namespace/$projname: $forkid\nDEBUG: Adding users...";
 
+    print "Done.\nDEBUG: Syncing milestones, issues, and labels.... ";
+    $api -> sync_issues($sourceid, $forkid, 1)
+        or die $api -> errstr()."\n";
+
+    print "Done.\nFork: $namespace/$projname: $forkid\nDEBUG: Adding users...";
     if(scalar(@{$userids})) {
         my $userhash = {};
         foreach my $userid (@{$userids}) {
