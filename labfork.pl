@@ -105,7 +105,7 @@ sub deep_clone {
 
     print "DEBUG: Doing deep fork of $sourceid... ";
     # Do the actual fork into the admin user space
-    my $forkid = $api -> deep_fork($sourceid)
+    my $forkid = $api -> deep_fork($sourceid, 1, 1)
         or die "Error: ".$api -> errstr()."\n";
 
     print "Done.\nDEBUG: Doing rename of $forkid as $projname... ";
