@@ -65,4 +65,4 @@ my $api = GitLab::API::Utils -> new(url   => $config -> {"gitlab"} -> {"url"},
 # where failures should kill the script before anything is done.
 my $userids  = $api -> lookup_users(\@users);
 
-deep_clone($api, $sourceid, $namespage, $projname, $userids);
+deep_clone($api, $sourceid, $namespace, $projname, $userids);
