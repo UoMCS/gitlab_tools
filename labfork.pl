@@ -166,6 +166,6 @@ print "WARN: One or more user lookups failed:\n\t".join("\n\t", @{$failures})."\
     if(scalar(@{$failures}));
 
 print "Got data: ".Dumper($grouphash)."\n";
-#foreach my $group (keys(%{$grouphash})) {
-#    deep_clone($api, $sourceid, $namespace, $projbase."_".$group, $grouphash -> {$group});
-#}
+foreach my $group (keys(%{$grouphash})) {
+    deep_clone($api, $sourceid, $namespace, $projbase."_".$group, $grouphash -> {$group});
+}
