@@ -49,6 +49,8 @@ sub deep_clone {
     print "Done.\n"
 }
 
+# Turn on autoflushing
+$| = 1;
 
 my $config = Webperl::ConfigMicro -> new("config/gitlab.cfg")
     or die "Error: Unable to load configuration: $!\n";
