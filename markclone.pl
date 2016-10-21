@@ -119,11 +119,6 @@ sub process_log {
                 print "\nERROR: ".$api -> errstr()."\n";
             }
 
-            # Clone the repository
-            print "Cloning ".$project -> {"ssh_url_to_repo"}."... ";
-            my $out = system("/usr/bin/git clone $project->{ssh_url_to_repo}");
-            print "output:\n$out\n";
-
         } else {
             print "ERROR: Unable to look up project $id: ".$api -> errstr()."\n";
         }
