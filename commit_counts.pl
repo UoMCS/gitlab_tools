@@ -80,6 +80,21 @@ sub fetch_commit_counts {
     return $result;
 }
 
+sub find_user {
+    my $group = shift;
+    my $name  = shift;
+    my $email = shift;
+
+    foreach my $user (@{$group -> {"users"}}) {
+        return $user -> {"username"}
+        if(lc($user -> {"email"}) eq lc($email) ||
+           lc($user -> {"username"}) eq lc($name) ||
+           lc($user -> {"fullname"}) eq lc($name));
+    }
+
+    return "$name <$email>";
+}
+
 sub set_commit_count {
     my $group  = shift;
     my $record = shift;
@@ -93,6 +108,9 @@ sub set_commit_count {
     $email =~ s/^\s*\[?(.*?)\]?\s*$/$1/;
 
     print "Count $count for $name - $email\n";
+
+    my $username = find_user($group, $name, $email);
+    $group -> {"commits"} -> {$username} += $count;
 }
 
 
@@ -116,7 +134,7 @@ $rest -> addHeader("Private-Token", $udataconfig -> {"API"} -> {"token"});
 my $groupdata = fetch_group_data($rest, $course)
     or die "Unable to open group file: $!\n";
 
-foreach my $group (@{$groupdata}) {
+foreach my $group (sort { $a -> {"name"} cmp $b -> {"name"} } @{$groupdata}) {
     prepare_counters($group);
 
     my $result = fetch_commit_counts($path, $base, $group -> {"name"}, $start, $finish);
