@@ -110,7 +110,7 @@ sub set_commit_count {
     print "Count $count for $name - $email\n";
 
     my $username = find_user($group, $name, $email);
-    $group -> {"commits"} -> {$username} += $count;
+    $group -> {"commits"} -> {$username} -> {"count"} += $count;
 }
 
 
@@ -143,4 +143,10 @@ foreach my $group (sort { $a -> {"name"} cmp $b -> {"name"} } @{$groupdata}) {
     foreach my $line (@lines) {
         set_commit_count($group, $line);
     }
+
+    print $group -> {"name"},"\n";
+    foreach my $count (sort { $b -> {"count"} <=> $a -> {"count"} } @{$group -> {"commits"}}) {
+        print "\t",$count -> {"count"}," ",$count -> {"user"} -> {"username"}," ",$count -> {"user"} -> {"fullname"},"\n";
+    }
+    print "\n";
 }
