@@ -85,6 +85,9 @@ sub set_commit_count {
     my $record = shift;
 
     my ($count, $name, $email) = $record =~ /^\s+(\d+)\s+([^<]+)<(.*?)>$/;
+    die "Unable to parse line '$record'\n"
+        unless(defined($count) && $name && $email);
+
     print "Count $count for $name - $email\n";
 }
 
@@ -119,5 +122,3 @@ foreach my $group (@{$groupdata}) {
         set_commit_count($group, $line);
     }
 }
-
-print Dumper($groupdata);
