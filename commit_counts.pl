@@ -92,7 +92,7 @@ sub find_user {
            lc($user -> {"fullname"}) eq lc($name));
     }
 
-    return "$name <$email>";
+    return "!!! $name <$email>";
 }
 
 sub set_commit_count {
@@ -106,8 +106,6 @@ sub set_commit_count {
     # Trim leading and trailing spaces and [ ]
     $name  =~ s/^\s*\[?(.*?)\]?\s*$/$1/;
     $email =~ s/^\s*\[?(.*?)\]?\s*$/$1/;
-
-    print "Count $count for $name - $email\n";
 
     my $username = find_user($group, $name, $email);
     $group -> {"commits"} -> {$username} -> {"count"} += $count;
@@ -145,8 +143,9 @@ foreach my $group (sort { $a -> {"name"} cmp $b -> {"name"} } @{$groupdata}) {
     }
 
     print $group -> {"name"},"\n";
-    foreach my $count (sort { $group -> {"commits"} -> {$b} -> {"count"} <=> $group -> {"commits"} -> {$a} -> {"count"} } keys @{$group -> {"commits"}}) {
-        print "\t",$count -> {"count"}," ",$count -> {"user"} -> {"username"}," ",$count -> {"user"} -> {"fullname"},"\n";
-    }
+    foreach my $name (sort { $group -> {"commits"} -> {$b} -> {"count"} <=> $group -> {"commits"} -> {$a} -> {"count"} } keys %{$group -> {"commits"}}) {
+       my $commits = $group -> {"commits"} -> {$name};
+        print "\t",$commits -> {"count"},": ",$name," ",$commits -> {"user"} -> {"fullname"},"\n";
+     }
     print "\n";
 }
