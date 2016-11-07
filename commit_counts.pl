@@ -145,7 +145,7 @@ foreach my $group (sort { $a -> {"name"} cmp $b -> {"name"} } @{$groupdata}) {
     }
 
     print $group -> {"name"},"\n";
-    foreach my $count (sort { $b -> {"count"} <=> $a -> {"count"} } @{$group -> {"commits"}}) {
+    foreach my $count (sort { $group -> {"commits"} -> {$b} -> {"count"} <=> $group -> {"commits"} -> {$a} -> {"count"} } keys @{$group -> {"commits"}}) {
         print "\t",$count -> {"count"}," ",$count -> {"user"} -> {"username"}," ",$count -> {"user"} -> {"fullname"},"\n";
     }
     print "\n";
