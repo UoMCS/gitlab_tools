@@ -48,6 +48,15 @@ sub fetch_group_data {
     return $json;
 }
 
+sub prepare_counters {
+    my $group = shift;
+
+    foreach my $user (@{$group -> {"users"}}) {
+        $group -> {"commits"} -> {$user -> {"username"}} = { "user"  => $user,
+                                                             "count" =>  0 };
+    }
+}
+
 
 sub fetch_commit_counts {
     my $path   = shift;
@@ -65,8 +74,18 @@ sub fetch_commit_counts {
     my $cmd = named_sprintf($cmdfmt, { "since" => $start, "until" => $finish });
 
     my $result = `$cmd`;
+    die "Git command failed: $result - $?"
+        if($?);
 
-    print "$team:\n".$result."\n";
+    return $result;
+}
+
+sub set_commit_count {
+    my $group  = shift;
+    my $record = shift;
+
+    my ($count, $name, $email) = $record =~ /^\s+(\d+)\s+([^<]+)<(.*?)>$/;
+    print "Count $count for $name - $email\n";
 }
 
 
@@ -91,5 +110,14 @@ my $groupdata = fetch_group_data($rest, $course)
     or die "Unable to open group file: $!\n";
 
 foreach my $group (@{$groupdata}) {
-    fetch_commit_counts($path, $base, $group -> {"name"}, $start, $finish);
+    prepare_counters($group);
+
+    my $result = fetch_commit_counts($path, $base, $group -> {"name"}, $start, $finish);
+
+    my @lines = split(/^/, $result);
+    foreach my $line (@lines) {
+        set_commit_count($group, $line);
+    }
 }
+
+print Dumper($groupdata);
