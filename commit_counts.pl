@@ -88,6 +88,10 @@ sub set_commit_count {
     die "Unable to parse line '$record'\n"
         unless(defined($count) && $name && $email);
 
+    # Trim leading and trailing spaces and [ ]
+    $name  =~ s/^\s*\[?(.*?)\]?\s*$/$1/;
+    $email =~ s/^\s*\[?(.*?)\]?\s*$/$1/;
+
     print "Count $count for $name - $email\n";
 }
 
