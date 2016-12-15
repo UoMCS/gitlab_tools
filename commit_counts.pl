@@ -99,9 +99,9 @@ sub set_commit_count {
     my $group  = shift;
     my $record = shift;
 
-    my ($count, $name, $email) = $record =~ /^\s+(\d+)\s+([^<]+)<(.*?)>$/;
+    my ($count, $name, $email) = $record =~ /^\s+(\d+)\s+([^<]+)<(.*?)>/;
     die "Unable to parse line '$record'\n"
-        unless(defined($count) && $name && $email);
+        unless(defined($count) && $name && defined($email));
 
     # Trim leading and trailing spaces and [ ]
     $name  =~ s/^\s*\[?(.*?)\]?\s*$/$1/;
