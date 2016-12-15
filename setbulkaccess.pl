@@ -26,7 +26,7 @@ sub process_log {
     my $file  = shift;
 
     my $logdata = load_file($file)
-        or die "Unable to load log file: $!\n";
+        or die "Unable to load log file '$file': $!\n";
 
     my %forks = $logdata =~ /^Fork: [^:]+_(\w+): (\d+)$/mg;
     return \%forks;
@@ -52,7 +52,10 @@ sub set_permission {
 
     # now set each user's permission to the level specified
     foreach my $user (@{$users}) {
-        print "Setting ".$user -> {"name"}." to permission $levelid on $projid...\n";
+        # skip jenkins users
+        next if($user -> {"name"} =~ /^\d{4}_COMP\d+_\w+$/);
+
+        print "\tSetting ".$user -> {"name"}." to permission $levelid on $projid...\n";
         my $res = $api -> {"api"} -> call("/projects/:id/members/:user_id", "PUT", { id           => $projid,
                                                                                      user_id      => $user -> {"id"},
                                                                                      access_level => $levelid } )
@@ -93,8 +96,9 @@ if(scalar(@groups)) {
 
 # No groups specified, so do all of them
 } else {
-    foreach my $group (keys(%{$forks})) {
+    foreach my $group (sort keys(%{$forks})) {
         print "Setting permissions for group $group...\n";
         set_permission($api, $levelid, $forks -> {$group});
+        print "\n";
     }
 }
