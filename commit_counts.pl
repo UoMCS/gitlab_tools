@@ -14,7 +14,7 @@ use JSON;
 use Cwd;
 use Data::Dumper;
 
-my $cmdfmt = '/usr/bin/git --bare shortlog -ens --since="%(since)s"  --until="%(until)s" --date=local --all';
+my $cmdfmt = '/usr/bin/git --bare shortlog -ens --no-merges --since="%(since)s"  --until="%(until)s" --date=local --all';
 
 
 ## @method void arg_error($message)
