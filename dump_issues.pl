@@ -15,6 +15,19 @@ use strict;
 use v5.12;
 use lib qw(/var/www/webperl);
 
+use FindBin;             # Work out where we are
+my $scriptpath;
+BEGIN {
+    $ENV{"PATH"} = "/bin:/usr/bin"; # safe path.
+
+    # $FindBin::Bin is tainted by default, so we may need to fix that
+    # NOTE: This may be a potential security risk, but the chances
+    # are honestly pretty low...
+    if ($FindBin::Bin =~ /(.*)/) {
+        $scriptpath = $1;
+    }
+}
+
 use Webperl::ConfigMicro;
 use Webperl::Utils qw(load_file save_file);
 use GitLab::API::Utils;
@@ -131,7 +144,7 @@ sub build_issue_data {
 
 my $start = DateTime -> now();
 
-my $config = Webperl::ConfigMicro -> new("config/gitlab.cfg")
+my $config = Webperl::ConfigMicro -> new(path_join($scriptpath, "config", "gitlab.cfg"))
     or die "Error: Unable to load configuration: $!\n";
 
 my $filter   = shift @ARGV or arg_error("No team filter specified.");
