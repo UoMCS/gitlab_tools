@@ -50,6 +50,7 @@ sub load_teams {
 
     # Process the headers
     chomp($line = <DATA>);
+
     my @headers = split(/,/, lc($line));
 
     # Convenience variables for readability
@@ -63,12 +64,10 @@ sub load_teams {
 
         die "No data for team field ($teamfield) or id field ($idfield) on line '$line'\n"
             unless($vals{$teamfield} && $vals{$idfield});
-
         push(@{$teams -> {$vals{$teamfield}}}, $vals{$idfield})
     }
 
     close(DATA);
-
     return $teams;
 }
 
@@ -78,6 +77,8 @@ my $config = Webperl::ConfigMicro -> new("config/userdata.cfg")
 
 my $course   = shift @ARGV or arg_error("No course specified.");
 my $teamfile = shift @ARGV or arg_error("No team file specified.");
+
+print "Reading team file $teamfile...\n";
 
 # Pull in the team data
 my $teams = load_teams($teamfile, $config);
