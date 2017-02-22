@@ -29,7 +29,7 @@ BEGIN {
 }
 
 use Webperl::ConfigMicro;
-use Webperl::Utils qw(load_file save_file);
+use Webperl::Utils qw(load_file save_file path_join);
 use GitLab::API::Utils;
 use Text::Sprintf::Named qw(named_sprintf);
 use DateTime;
