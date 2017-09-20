@@ -13,6 +13,7 @@ use v5.14;
 use lib qw(/var/www/webperl);
 
 use Webperl::ConfigMicro;
+use Webperl::Utils qw(load_file);
 use Text::Sprintf::Named qw(named_sprintf);
 use GitLab::API::Utils;
 use REST::Client;
@@ -28,6 +29,18 @@ sub arg_error {
     my $message = shift;
 
     die "Error: $message\nUsage: labfork.pl <sourceID> <course> <namespace> <projbase>\n";
+}
+
+
+sub load_group_data {
+    my $filename = shift;
+
+    my $data = load_file($filename)
+        or die "Unable to read file: $!\n";
+
+    my $json = decode_json($data);
+
+    return $json;
 }
 
 
@@ -50,6 +63,7 @@ sub fetch_group_data {
 
     return $json;
 }
+
 
 ## @fn @ generate_group_lists($api, $groupdata, $settings)
 # Given an array of groups, generate a new hash containing group members by
@@ -135,6 +149,7 @@ sub deep_clone {
     print "Done.\n"
 }
 
+
 my $config = Webperl::ConfigMicro -> new("config/gitlab.cfg")
     or die "Error: Unable to load configuration: $!\n";
 
@@ -148,6 +163,7 @@ my $sourceid  = shift @ARGV or arg_error("No sourceID specified.");
 my $course    = shift @ARGV or arg_error("No course specified.");
 my $namespace = shift @ARGV or arg_error("No namespace specified.");
 my $projbase  = shift @ARGV or arg_error("No project base name specified.");
+my $jsonfile  = shift @ARGV;
 
 my $api = GitLab::API::Utils -> new(url   => $config -> {"gitlab"} -> {"url"},
                                     token => $config -> {"gitlab"} -> {"token"});
@@ -156,9 +172,16 @@ my $rest = REST::Client -> new({ host => $udataconfig -> {"API"} -> {"url"} })
     or die "Failed to create REST Client\n";
 $rest -> addHeader("Private-Token", $udataconfig -> {"API"} -> {"token"});
 
+print "Autogroup is ".($config -> {"groups"} -> {"autogroup"} ? "on" : "off").". Press return to continue.";
+my $conf = <STDIN>;
+
 # Fetch the group data from the userdata system
-my $groupdata = fetch_group_data($rest, $course)
-    or die "Unable to open group file: $!\n";
+my $groupdata;
+if($jsonfile) {
+    $groupdata = load_group_data($jsonfile);
+} else {
+    $groupdata = fetch_group_data($rest, $course)
+}
 
 # Now convert the users in the groups into gitlab users
 my ($grouphash, $failures) = generate_group_lists($api, $groupdata, $config);
