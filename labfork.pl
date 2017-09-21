@@ -32,6 +32,13 @@ sub arg_error {
 }
 
 
+## @fn $ load_group_data($filename)
+# Load the group setup JSON from the specified file. This expects a JSON
+# file formatted in a way that matches the output from the userdata API
+# GET /courses/{year}/groups/{course} endpoint.
+#
+# @param filename The name of the file to load the JSON from
+# @return A reference to an array of group hashes.
 sub load_group_data {
     my $filename = shift;
 
