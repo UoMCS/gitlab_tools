@@ -117,34 +117,56 @@ sub generate_group_lists {
 }
 
 
+## @fn void deep_clone($api, $sourceid, $namespace, $projname, $userids, $dryrun)
+# Perform a deep clone of a project into a new namespace with a new name, and
+# enrol the specified users on the new clone as developers.
+#
+# @param api       A reference to a gitlab API object
+# @param sourceid  The ID of the source project to fork.
+# @param namespace The namespace to move the fork into.
+# @param userids   A reference to an array of user IDs to add to the fork.
+# @param dryrun    If set, do not actually perform any operations, just pretend to.
 sub deep_clone {
     my $api       = shift;
     my $sourceid  = shift;
     my $namespace = shift;
     my $projname  = shift;
     my $userids   = shift;
+    my $dryrun    = shift;
 
     print "DEBUG: Doing deep fork of $sourceid... ";
     # Do the actual fork into the admin user space
-    my $forkid = $api -> deep_fork($sourceid)
-        or die "Error: ".$api -> errstr()."\n";
+    my $forkid;
+
+    if($dryrun) {
+        $forkid = 12345;
+    } else {
+        $forkid = $api -> deep_fork($sourceid)
+            or die "Error: ".$api -> errstr()."\n";
+    }
 
     print "Done.\nDEBUG: Doing rename of $forkid as $projname... ";
     # Rename it so it can be moved sanely
-    $api -> rename_project($forkid, $projname)
-        or die $api -> errstr()."\n";
+    unless($dryrun) {
+        $api -> rename_project($forkid, $projname)
+            or die $api -> errstr()."\n";
+    }
 
     print "Done.\nDEBUG: Moving $forkid into namespace $namespace... ";
     # And move it into the target namespace
-    $api -> move_project($forkid, $namespace)
-        or die $api -> errstr()."\n";
+    unless($dryrun) {
+        $api -> move_project($forkid, $namespace)
+            or die $api -> errstr()."\n";
+    }
 
     print "Done.\nDEBUG: Syncing milestones, issues, and labels.... ";
-    $api -> sync_issues($sourceid, $forkid, 1)
-        or die $api -> errstr()."\n";
+    unless($dryrun) {
+        $api -> sync_issues($sourceid, $forkid, 1)
+            or die $api -> errstr()."\n";
+    }
 
     print "Done.\nFork: $namespace/$projname: $forkid\nDEBUG: Adding users...";
-    if(scalar(@{$userids})) {
+    if(!$dryrun && scalar(@{$userids})) {
         my $userhash = {};
         foreach my $userid (@{$userids}) {
             $userhash -> {$userid} = $api -> {"api"} -> {"access_levels"} -> {"developer"};
