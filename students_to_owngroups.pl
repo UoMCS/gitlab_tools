@@ -49,6 +49,12 @@ sub fetch_student_data {
 }
 
 
+## @fn $ build_group_list($data)
+# Build the list of groups to create one group per user, with the user as the
+# single group member.
+#
+# @param data A reference to an array of student records from the API
+# @return A reference to an array of group hashes.
 sub build_group_list {
     my $data   = shift;
 
@@ -62,6 +68,14 @@ sub build_group_list {
 }
 
 
+## @fn void check_gitlab_accounts($api, $sudents)
+# Determine whether the students specified have accounts in GitLab.
+# This checks through the list of specified students and checks whether they
+# have a matching account in GitLab (based on their email address, which should
+# be unique, hopefully).
+#
+# @param api      A reference to a Gitlab API handle.
+# @param students A reference to an array of student hashes to check.
 sub check_gitlab_accounts {
     my $api      = shift;
     my $students = shift;
@@ -98,6 +112,7 @@ $rest -> addHeader("Private-Token", $udataconfig -> {"API"} -> {"token"});
 my $studentdata = fetch_student_data($rest, $course);
 my $groupdata   = build_group_list($studentdata);
 
+# Dump the JSON data to stdout so it can be redirected or piped
 print JSON -> new -> utf8(1) -> pretty(1) -> encode($groupdata);
 
 # Go through and check that students have gitlab accounts
