@@ -48,6 +48,12 @@ sub fetch_group_data {
     return $json;
 }
 
+
+## @fn void prepare_counters($group)
+# Given a group reference, initialise a hash of commit counts for
+# each user in the group.
+#
+# @param group A reference to a hash containing the group data.
 sub prepare_counters {
     my $group = shift;
 
@@ -80,6 +86,7 @@ sub fetch_commit_counts {
     return $result;
 }
 
+
 sub find_user {
     my $group = shift;
     my $name  = shift;
@@ -94,6 +101,7 @@ sub find_user {
 
     return "!!! $name <$email>";
 }
+
 
 sub set_commit_count {
     my $group  = shift;
