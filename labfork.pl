@@ -28,7 +28,7 @@ use Data::Dumper;
 sub arg_error {
     my $message = shift;
 
-    die "Error: $message\nUsage: labfork.pl <sourceID> <course> <namespace> <projbase>\n";
+    die "Error: $message\nUsage: labfork.pl <sourceID> <year> <course> <namespace> <projbase>\n";
 }
 
 
@@ -87,6 +87,8 @@ sub generate_group_lists {
     my $api       = shift;
     my $groupdata = shift;
     my $settings  = shift;
+    my $course    = shift;
+    my $year      = shift;
 
     print "DEBUG: Generating group lists...\n";
 
@@ -95,7 +97,9 @@ sub generate_group_lists {
     foreach my $group (@{$groupdata}) {
         print "DEBUG: Got group ".$group -> {"name"}." with ".scalar(@{$group -> {"users"}})." members\n";
 
-        push(@{$group -> {"users"}}, { "email"    => named_sprintf($settings -> {"groups"} -> {"email_format"}, { "group" => $group -> {"name"} }),
+        push(@{$group -> {"users"}}, { "email"    => named_sprintf($settings -> {"groups"} -> {"email_format"}, { group  => $group -> {"name"},
+                                                                                                                  course => $course,
+                                                                                                                  year   => $year }),
                                        "username" => "User for group ".$group -> {"name"},
                                        "user_id"  => "NA" })
             if($settings -> {"groups"} -> {"autogroup"});
@@ -189,6 +193,7 @@ my $udataconfig = Webperl::ConfigMicro -> new("config/userdata.cfg")
 $| = 1;
 
 my $sourceid  = shift @ARGV or arg_error("No sourceID specified.");
+my $year      = shift @ARGV or arg_error("No year specified.");
 my $course    = shift @ARGV or arg_error("No course specified.");
 my $namespace = shift @ARGV or arg_error("No namespace specified.");
 my $projbase  = shift @ARGV or arg_error("No project base name specified.");
@@ -213,10 +218,10 @@ if($jsonfile) {
 }
 
 # Now convert the users in the groups into gitlab users
-my ($grouphash, $failures) = generate_group_lists($api, $groupdata, $config);
+my ($grouphash, $failures) = generate_group_lists($api, $groupdata, $config, $course, $year);
 print "WARN: One or more user lookups failed:\n\t".join("\n\t", @{$failures})."\nIgnoring failed users.\n"
     if(scalar(@{$failures}));
 
 foreach my $group (sort keys(%{$grouphash})) {
-    deep_clone($api, $sourceid, $namespace, $projbase."_".$group, $grouphash -> {$group});
+    deep_clone($api, $sourceid, $namespace, $projbase."_".$group, $grouphash -> {$group}, 0);
 }
