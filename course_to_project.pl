@@ -2,8 +2,9 @@
 
 # A script to bulk-add all users on a course to a single gitlab project.
 #
-# Pass it a gitlab project ID as the first argument, and a course code
-# as the second.
+# Pass it a gitlab project ID as the first argument, a course code
+# as the second, and the access level ('gues', 'reporter', 'developer', etc)
+# as the third.
 
 use strict;
 use v5.14;
