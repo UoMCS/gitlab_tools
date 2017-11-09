@@ -23,7 +23,7 @@ use Data::Dumper;
 sub arg_error {
     my $message = shift;
 
-    die "Error: $message\nUsage: course_to_project.pl <projectID> <course>\n";
+    die "Error: $message\nUsage: course_to_project.pl <projectID> <course> <level>\n";
 }
 
 
@@ -67,19 +67,19 @@ sub fetch_course_users {
 }
 
 
-## @fn void set_project_users($gitlab, $projid, $users, $level)
+## @fn void set_project_users($gitlab, $projid, $users, $levelid)
 # Given a project ID and list of users, add the users to the project as
 # the specified level (defaults to 'developer')
 #
-# @param gitlab A reference to a gitlab API object to work through.
-# @param projid The ID of the project to add the users to.
-# @param users  A reference to an array of gitlab user IDs.
-# @param level  The access level to add users at. Defaults to 30 ('developer').
+# @param gitlab  A reference to a gitlab API object to work through.
+# @param projid  The ID of the project to add the users to.
+# @param users   A reference to an array of gitlab user IDs.
+# @param levelid The access level to add users at. Defaults to 30 ('developer').
 sub set_project_users {
-    my $gitlab = shift;
-    my $projid = shift;
-    my $users  = shift;
-    my $level  = shift // 30;
+    my $gitlab  = shift;
+    my $projid  = shift;
+    my $users   = shift;
+    my $levelid = shift // 30;
 
     foreach my $userid (@{$users}) {
         print "DEBUG: Adding user $userid to project $projid...\n";
@@ -101,6 +101,11 @@ $| = 1;
 
 my $projectid = shift @ARGV or arg_error("No project ID specified.");
 my $course    = shift @ARGV or arg_error("No course specified.");
+my $level     = shift @ARGV or arg_error("No level specified.");
+
+# convert the level
+my $levelid = $api -> {"api"} -> {"access_levels"} -> {$level}
+    or die "The specified level is not valid. Valid levels are: ".join(", ", keys(%{$api -> {"api"} -> {"access_levels"}}))."\n";
 
 my $gitlab = GitLab::API::Basic -> new(url   => $config -> {"gitlab"} -> {"url"},
                                        token => $config -> {"gitlab"} -> {"token"});
@@ -112,4 +117,4 @@ $udata -> addHeader("Private-Token", $udataconfig -> {"API"} -> {"token"});
 my ($users, $failures) = fetch_course_users($gitlab, $udata, $course);
 print "DEBUG: Got ".scalar(@{$users})." users to add\n".scalar(@{$failures})." lookups failed:\n\t".join("\n\t", @{$failures})."\nIgnoring failed users.\n";
 
-set_project_users($gitlab, $projectid, $users);
+set_project_users($gitlab, $projectid, $users, $levelid);
