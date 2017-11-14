@@ -17,6 +17,9 @@ use REST::Client;
 use JSON;
 use Data::Dumper;
 
+my $dryrun = 1;
+
+
 ## @method void arg_error($message)
 # Print an error message indicating the correct invocation arguments for the script.
 #
@@ -83,11 +86,13 @@ sub set_project_users {
     my $levelid = shift // 30;
 
     foreach my $userid (@{$users}) {
-        print "DEBUG: Adding user $userid to project $projid...\n";
-        my $res = $gitlab -> call("/projects/:id/members", "POST", { id           => $projid,
-                                                                     user_id      => $userid,
-                                                                     access_level => $level } )
-            or die "Unable to set permissions for ".$userid." on $projid: ".$gitlab -> errstr()."\n";
+        print "DEBUG: Adding user $userid with level $levelid to project $projid...\n";
+        if(!$dryrun) {
+            my $res = $gitlab -> call("/projects/:id/members", "POST", { id           => $projid,
+                                                                         user_id      => $userid,
+                                                                         access_level => $levelid } )
+                or die "Unable to set permissions for ".$userid." on $projid: ".$gitlab -> errstr()."\n";
+        }
     }
 }
 
