@@ -109,10 +109,6 @@ my $projectid = shift @ARGV or arg_error("No project ID specified.");
 my $course    = shift @ARGV or arg_error("No course specified.");
 my $level     = shift @ARGV or arg_error("No level specified.");
 
-# convert the level
-my $levelid = $api -> {"api"} -> {"access_levels"} -> {$level}
-    or die "The specified level is not valid. Valid levels are: ".join(", ", keys(%{$api -> {"api"} -> {"access_levels"}}))."\n";
-
 my $gitlab = GitLab::API::Basic -> new(url   => $config -> {"gitlab"} -> {"url"},
                                        token => $config -> {"gitlab"} -> {"token"});
 
@@ -120,7 +116,14 @@ my $udata = REST::Client -> new({ host => $udataconfig -> {"API"} -> {"url"} })
     or die "Failed to create REST Client\n";
 $udata -> addHeader("Private-Token", $udataconfig -> {"API"} -> {"token"});
 
+# convert the level
+my $levelid = $gitlab -> {"access_levels"} -> {$level}
+    or die "The specified level is not valid. Valid levels are: ".join(", ", keys(%{$gitlab -> {"access_levels"}}))."\n";
+
 my ($users, $failures) = fetch_course_users($gitlab, $udata, $course);
-print "DEBUG: Got ".scalar(@{$users})." users to add\n".scalar(@{$failures})." lookups failed:\n\t".join("\n\t", @{$failures})."\nIgnoring failed users.\n";
+print "DEBUG: Got ".scalar(@{$users})." users to add\n";
+if($failures && scalar(@{$failures})) {
+    print scalar(@{$failures})." lookups failed:\n\t".join("\n\t", @{$failures})."\nIgnoring failed users.\n";
+}
 
 set_project_users($gitlab, $projectid, $users, $levelid);
