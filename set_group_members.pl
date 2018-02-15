@@ -31,6 +31,25 @@ sub arg_error {
 }
 
 
+sub get_id_from_email {
+    my $rest  = shift;
+    my $email = shift;
+
+    $email =~ s/@/%40/;
+
+    my $resp = $rest -> GET("/users/current/user/$email");
+    my $json = decode_json($resp -> responseContent());
+
+    die "Error response: ".Dumper($json)
+        unless(ref($json) eq "ARRAY");
+
+    return($json -> [0] -> {"user"} -> {"spotid"})
+        if($json -> [0] -> {"user"} -> {"spotid"});
+
+    die "Unable to locate user with email $email: $json\n";
+}
+
+
 ## @fn $ load_teams($teamfile, $config)
 # Load the team member allocations from the specified team file. This will
 # attempt to read team allocations from the file and store them in a hash
@@ -42,6 +61,7 @@ sub arg_error {
 sub load_teams {
     my $teamfile = shift;
     my $config   = shift;
+    my $rest     = shift;
     my $teams    = {};
     my $line;
 
@@ -56,15 +76,20 @@ sub load_teams {
     # Convenience variables for readability
     my $teamfield = $config -> {"Teams"} -> {"teamfield"};
     my $idfield   = $config -> {"Teams"} -> {"idfield"};
+    my $mailfield = $config -> {"Teams"} -> {"mailfield"};
 
     while($line = <DATA>) {
         chomp($line);
         my %vals;
         @vals{@headers} = split(/,/, $line);
 
-        die "No data for team field ($teamfield) or id field ($idfield) on line '$line'\n"
-            unless($vals{$teamfield} && $vals{$idfield});
-        push(@{$teams -> {$vals{$teamfield}}}, $vals{$idfield})
+        die "No data for team field ($teamfield) or data field ($idfield/$mailfield) on line '$line': ".Dumper(\%vals)."\n"
+            unless($vals{$teamfield} && ($vals{$idfield} || $vals{$mailfield}));
+
+        # If we have mail field, but no id, look an ID up
+        $vals{$idfield} = get_id_from_email($rest, $vals{$mailfield});
+
+        push(@{$teams -> {$vals{$teamfield}}}, $vals{$idfield});
     }
 
     close(DATA);
@@ -80,15 +105,15 @@ my $teamfile = shift @ARGV or arg_error("No team file specified.");
 
 print "Reading team file $teamfile...\n";
 
-# Pull in the team data
-my $teams = load_teams($teamfile, $config);
-print "Got ".scalar(keys(%{$teams}))." teams, adding users to teams...\n";
-
 # Need a REST API object to issue queries through
 my $rest = REST::Client -> new({ host => $config -> {"API"} -> {"url"} })
     or die "Failed to create REST Client\n";
 
 $rest -> addHeader("Private-Token", $config -> {"API"} -> {"token"});
+
+# Pull in the team data
+my $teams = load_teams($teamfile, $config, $rest);
+print "Got ".scalar(keys(%{$teams}))." teams, adding users to teams...\n";
 
 # Process each team, adding members to the teams
 foreach my $team (sort keys(%{$teams})) {
