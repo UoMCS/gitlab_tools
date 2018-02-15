@@ -147,6 +147,8 @@ sub deep_clone {
     } else {
         $forkid = $api -> deep_fork($sourceid)
             or die "Error: ".$api -> errstr()."\n";
+
+        sleep(2); # slow things a bit to let server keep up
     }
 
     print "Done.\nDEBUG: Doing rename of $forkid as $projname... ";
