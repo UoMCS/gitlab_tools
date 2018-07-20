@@ -28,9 +28,6 @@ use MediaWiki::API;
 
 use lib qw(/var/www/webperl);
 use Webperl::ConfigMicro;
-use Webperl::Utils qw(load_file);
-
-use Data::Dumper;
 
 ## @fn void query_failed($api, $err)
 # Exit the script wiht an error message after an API call failure.
