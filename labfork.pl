@@ -7,6 +7,22 @@
 # specified project once for each group, adding the group members to the
 # forked projects as it goes.
 #
+# If the optional [json file] argument is provided, it should be the
+# filename of a file containing JSON data defining the groups to create
+# projects for in the format
+# [
+#   {
+#     "name": "name of the group",
+#     "users": [
+#                {
+#                  "username" : "student username",
+#                  "email" : "student email address",
+#                },
+#                ...
+#              ]
+#   },
+#   ...
+# ]
 
 use strict;
 use v5.14;
@@ -28,7 +44,7 @@ use Data::Dumper;
 sub arg_error {
     my $message = shift;
 
-    die "Error: $message\nUsage: labfork.pl <sourceID> <year> <course> <namespace> <projbase>\n";
+    die "Error: $message\nUsage: labfork.pl <sourceID> <year> <course> <namespace> <projbase> [json file]\n";
 }
 
 
