@@ -92,7 +92,10 @@ sub process_list_entries {
 
     # Process each part of the list, storing it in the page reference store
     foreach my $part (@parts) {
-        $part =~ s/^\s*(.*?)\s*$/$1/; # trim leading/trailing whitespace
+        $part =~ s/^\s*(.*?)\s*$/$1/s; # trim leading/trailing whitespace
+
+        # If whitespace removal resulted in no content, skip
+        next unless($part);
 
         # Get the first character so we can store in alphanumeric subhashes
         my $list = uc(substr($part, 0, 1));
