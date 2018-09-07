@@ -128,7 +128,7 @@ sub generate_group_lists {
                 print "uid: ".$res -> [0] -> {"id"}."\n";
             } else {
                 push(@{$failures}, $user -> {"user_id"}.": ".$user -> {"username"}.", ".$user -> {"email"});
-                print "failed.\n";
+                print "failed: ".($res -> {"errstr"} // "no error set")."\n";
             }
         }
     }
@@ -161,7 +161,7 @@ sub deep_clone {
     if($dryrun) {
         $forkid = 12345;
     } else {
-        $forkid = $api -> deep_fork($sourceid)
+        $forkid = $api -> deep_fork($sourceid, "root")
             or die "Error: ".$api -> errstr()."\n";
 
         sleep(2); # slow things a bit to let server keep up
