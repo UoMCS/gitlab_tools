@@ -84,7 +84,7 @@ sub check_gitlab_accounts {
         my $res = $api -> {"api"} -> call("/users", "GET", { search => $user -> {"user"} -> {"email"} });
 
         unless($res && scalar(@{$res})) {
-            print STDERR "Looking up ".$user -> {"user"} -> {"email"}." failed.\n";
+            print STDERR "GitLab: ".$user -> {"user"} -> {"email"}." not found (no account?)\n";
         }
     }
 }
