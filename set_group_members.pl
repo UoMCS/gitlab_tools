@@ -83,7 +83,7 @@ sub load_teams {
         my %vals;
         @vals{@headers} = split(/,/, $line);
 
-        die "No data for team field ($teamfield) or data field ($idfield/$mailfield) on line '$line': ".Dumper(\%vals)."\n"
+        die "No data for team field ($teamfield) or data field ($idfield/$mailfield) on line '$line':\n".Dumper(\%vals)."\n"
             unless($vals{$teamfield} && ($vals{$idfield} || $vals{$mailfield}));
 
         # If we have mail field, but no id, look an ID up
