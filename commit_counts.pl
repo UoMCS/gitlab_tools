@@ -64,6 +64,20 @@ sub prepare_counters {
 }
 
 
+## @method $ fetch_commit_counts($path, $base, $team, $start, $finish)
+# Obtain the number of commits made by a team between the start and
+# finish dates specified.
+#
+# @param path   The path of the directory containing the bare git repos
+#               for the course
+# @param base   The base name for repositories, should be something like "stendhal"
+# @param team   The name of the team to fetch commit counts for
+# @param start  The start date to count commits from
+# @param finish The end date to count commits to
+# @return A string containing the number of commits made by each user who
+#         has commited to the repo between the dates specified in the form
+#         <count> <name> <email>
+#         with one user per line.
 sub fetch_commit_counts {
     my $path   = shift;
     my $base   = shift;
@@ -87,6 +101,18 @@ sub fetch_commit_counts {
 }
 
 
+## @method $ find_user($group, $name, $email)
+# Attempt to determine which of the known users the specified name or
+# email address corresponds to. This will attempt to find the username
+# for a known user who either has the specified name as their username
+# or real name, or for whom the specified email address is an exact
+# match.
+#
+# @param group A reference to a hash containing the group information.
+# @param name  The name of the user to try to find
+# @param email The email address of the user to find
+# @return The username of a known user if a match is found, otherwise
+#         a string indicating that the user can't be matched.
 sub find_user {
     my $group = shift;
     my $name  = shift;
@@ -103,6 +129,14 @@ sub find_user {
 }
 
 
+## @method set_commit_count($group, $record)
+# Given a group and the information about the number of commits a
+# user with access to the repository made, try to calculate the commit
+# counts for the user, merging similar users when possible.
+#
+# @param group  A reference to a hash containing the group data.
+# @param record A string containing the commit counts for a single
+#               user who committed to the repo.
 sub set_commit_count {
     my $group  = shift;
     my $record = shift;
@@ -115,7 +149,10 @@ sub set_commit_count {
     $name  =~ s/^\s*\[?(.*?)\]?\s*$/$1/;
     $email =~ s/^\s*\[?(.*?)\]?\s*$/$1/;
 
+    # Try to work out who the user in the record really is
     my $username = find_user($group, $name, $email);
+
+    # And increment the counter for that user
     $group -> {"commits"} -> {$username} -> {"count"} += $count;
 }
 
@@ -140,16 +177,20 @@ $rest -> addHeader("Private-Token", $udataconfig -> {"API"} -> {"token"});
 my $groupdata = fetch_group_data($rest, $course)
     or die "Unable to open group file: $!\n";
 
+# Work out the commit counts for each group
 foreach my $group (sort { $a -> {"name"} cmp $b -> {"name"} } @{$groupdata}) {
     prepare_counters($group);
 
+    # obtain the list of users who committed to the repository
     my $result = fetch_commit_counts($path, $base, $group -> {"name"}, $start, $finish);
 
+    # For each of the users who commited, work out the commit counts after merging
     my @lines = split(/^/, $result);
     foreach my $line (@lines) {
         set_commit_count($group, $line);
     }
 
+    # And print out the summary information
     print $group -> {"name"},"\n";
     foreach my $name (sort { $group -> {"commits"} -> {$b} -> {"count"} <=> $group -> {"commits"} -> {$a} -> {"count"} } keys %{$group -> {"commits"}}) {
        my $commits = $group -> {"commits"} -> {$name};
