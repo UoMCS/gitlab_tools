@@ -52,8 +52,9 @@ sub set_permission {
 
     # now set each user's permission to the level specified
     foreach my $user (@{$users}) {
-        # skip jenkins users
+        # skip jenkins users and mentors
         next if($user -> {"name"} =~ /^\d{4}_COMP\d+_\w+$/);
+        next if($user -> {"username"} =~ /^mentor/);
 
         print "\tSetting ".$user -> {"name"}." to permission $levelid on $projid...\n";
         my $res = $api -> {"api"} -> call("/projects/:id/members/:user_id", "PUT", { id           => $projid,
