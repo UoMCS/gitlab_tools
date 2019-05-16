@@ -128,7 +128,17 @@ sub generate_group_lists {
                 print "uid: ".$res -> [0] -> {"id"}."\n";
             } else {
                 push(@{$failures}, $user -> {"user_id"}.": ".$user -> {"username"}.", ".$user -> {"email"});
-                print "failed: ".($res -> {"errstr"} // "no error set")."\n";
+                print "failed: ";
+                if($res) {
+                    if(ref($res) eq "HASH") {
+                        print $res -> {"errstr"};
+                    } else {
+                        print Dumper($res);
+                    }
+                } else {
+                    print "no error set";
+                }
+                print "\n";
             }
         }
     }
@@ -230,6 +240,7 @@ my $conf = <STDIN>;
 # Fetch the group data from the userdata system
 my $groupdata;
 if($jsonfile) {
+    print "Using JSON source from $jsonfile\n";
     $groupdata = load_group_data($jsonfile);
 } else {
     $groupdata = fetch_group_data($rest, $course)
