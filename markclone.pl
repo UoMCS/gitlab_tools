@@ -1,13 +1,12 @@
 #!/usr/bin/perl
 
-# Update the issues in deep-forked projects to pick up any new issues
-# set in the original project.
-
+# Extract the issue data for forked projects for marking.
 
 use strict;
 use v5.12;
 use lib qw(/var/www/webperl);
 
+use experimental qw("smartmatch");
 use Webperl::ConfigMicro;
 use Webperl::Utils qw(load_file save_file path_join);
 use Webperl::Template;
@@ -15,9 +14,6 @@ use Text::Markdown 'markdown';
 use GitLab::API::Utils;
 use Data::Dumper;
 use FindBin;
-
-# FIXME: Temporary fix for 5.18 making given/when spit out warnings.
-no if $] >= 5.018, warnings => "experimental::smartmatch";
 
 # Work out where the script is, so module and config loading can work.
 my $scriptpath;
