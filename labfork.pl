@@ -207,6 +207,16 @@ sub deep_clone {
         $api -> set_users($forkid, $userhash)
             or die $api -> errstr()."\n";
     }
+
+    print "Done.\nDEBUG: Removing branch protection... ";
+    # We ignore the result from this, as failure may happen because master wasn't
+    # protected to begin with
+    $api -> {"api"} -> call("/projects/:id/protected_branches/:name",
+                            "DELETE",
+                            { id   => $forkid,
+                              name => "master"
+                            });
+
     print "Done.\n"
 }
 
